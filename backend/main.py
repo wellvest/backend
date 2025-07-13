@@ -45,8 +45,11 @@ app.include_router(notifications.router, prefix="/api/notifications", tags=["Not
 app.include_router(otp.router, prefix="/api", tags=["Authentication"])
 
 # Mount static files for uploads
+# Using the same UPLOAD_DIR as defined in uploads.py
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+AVATAR_DIR = os.path.join(UPLOAD_DIR, "avatars")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(AVATAR_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # Mount frontend static files
