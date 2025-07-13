@@ -33,13 +33,32 @@ async def get_noc_data(
     
     try:
         # Get user data
-        profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
-        income_wallet = db.query(IncomeWallet).filter(IncomeWallet.user_id == current_user.id).first()
-        shopping_wallet = db.query(ShoppingWallet).filter(ShoppingWallet.user_id == current_user.id).first()
+        try:
+            profile = db.query(Profile).filter(Profile.user_id == current_user.id).first()
+            logger.debug(f"Profile found: {profile is not None}")
+        except Exception as e:
+            logger.error(f"Error querying profile: {str(e)}", exc_info=True)
+            raise
+            
+        try:
+            income_wallet = db.query(IncomeWallet).filter(IncomeWallet.user_id == current_user.id).first()
+            logger.debug(f"Income wallet found: {income_wallet is not None}")
+        except Exception as e:
+            logger.error(f"Error querying income wallet: {str(e)}", exc_info=True)
+            raise
+            
+        try:
+            shopping_wallet = db.query(ShoppingWallet).filter(ShoppingWallet.user_id == current_user.id).first()
+            logger.debug(f"Shopping wallet found: {shopping_wallet is not None}")
+        except Exception as e:
+            logger.error(f"Error querying shopping wallet: {str(e)}", exc_info=True)
+            raise
         
         income_balance = income_wallet.balance if income_wallet else 0
         shopping_balance = shopping_wallet.balance if shopping_wallet else 0
         plan_amount = profile.plan_amount if profile else 0
+        
+        logger.debug(f"Income balance: {income_balance}, Shopping balance: {shopping_balance}, Plan amount: {plan_amount}")
         
         # Check eligibility for NOC
         if plan_amount <= 0 and income_balance <= 0 and shopping_balance <= 0:
@@ -95,11 +114,14 @@ async def get_noc_data(
         return response_data
         
     except Exception as e:
-        print(f"Error in NOC data generation: {str(e)}")
-        logger.error(f"Error in NOC data generation: {str(e)}")
+        error_msg = f"Error in NOC data generation: {str(e)}"
+        print(error_msg)
+        logger.error(error_msg, exc_info=True)  # Include full exception details in logs
+        
+        # Return a more user-friendly error with technical details in logs
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error generating NOC data: {str(e)}"
+            detail="Error generating NOC document. Please try again later or contact support."
         )
 
 @router.get("/noc/download", response_class=HTMLResponse)
