@@ -19,3 +19,4 @@ sendgrid
 pdfkit
 wkhtmltopdf
 requests
+email-validator
