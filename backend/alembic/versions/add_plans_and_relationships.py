@@ -25,7 +25,18 @@ def generate_uuid():
 def upgrade():
     # Skip creating plans table as it already exists
     # We'll just focus on adding the relationships
-    
+    op.create_table('plans',
+        sa.Column('id', sa.String(), nullable=False, default=generate_uuid),
+        sa.Column('name', sa.String(), nullable=False),
+        sa.Column('description', sa.Text(), nullable=True),
+        sa.Column('amount', sa.Float(), nullable=False),
+        sa.Column('duration_months', sa.Integer(), nullable=False),
+        sa.Column('interest_rate', sa.Float(), nullable=False),
+        sa.Column('is_active', sa.Boolean(), default=True),
+        sa.Column('created_at', sa.DateTime(), default=func.now()),
+        sa.Column('updated_at', sa.DateTime(), default=func.now(), onupdate=func.now()),
+        sa.PrimaryKeyConstraint('id')
+    )
     # Add current_plan_id to profiles table
     op.add_column('profiles', sa.Column('current_plan_id', sa.String(), nullable=True))
     op.create_foreign_key(
