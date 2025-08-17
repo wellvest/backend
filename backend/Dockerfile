@@ -8,8 +8,13 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
-    wkhtmltopdf \
-    && rm -rf /var/lib/apt/lists/*
+    wget \
+    ca-certificates \
+    && wget -q https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.6/wkhtmltox_0.12.6-1.bionic_amd64.deb \
+    && dpkg -i wkhtmltox_0.12.6-1.bionic_amd64.deb \
+    && apt-get install -f -y \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm wkhtmltox_0.12.6-1.bionic_amd64.deb
 
 # Copy backend requirements
 COPY requirements.txt .
