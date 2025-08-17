@@ -1,45 +1,49 @@
-# Use Python 3.11 slim image as the base image
-FROM python:3.11-slim
+# Use a Python slim image for a smaller footprint.
+# The `bookworm` tag indicates Debian 12, which is more recent than `bionic` (Ubuntu 18.04).
+FROM python:3.11-slim-bookworm
 
-# Set working directory for backend
+# Set the working directory inside the container.
 WORKDIR /app
 
-# Install system dependencies (including those needed by wkhtmltopdf)
-RUN apt-get update && apt-get install -y \
+# Install system dependencies.
+# This single RUN command reduces the number of Docker layers.
+# It installs necessary libraries for Python packages and wkhtmltopdf,
+# then downloads and installs wkhtmltopdf from a stable release,
+# and finally cleans up the package lists to keep the image small.
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
-    wget \
-    ca-certificates \
     libxrender1 \
-    libx11-dev \
     libfontconfig1 \
+    libjpeg62-turbo \
     libssl-dev \
-    libjpeg8 \
-    liblcms2-2 \
-    libxslt1.1 \
-    && rm -rf /var/lib/apt/lists/* \
-    # Download and install wkhtmltox (make sure to use the proper version)
-    && wget -q https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.6/wkhtmltox_0.12.6-1.bionic_amd64.deb \
-    && dpkg -i wkhtmltox_0.12.6-1.bionic_amd64.deb \
-    # Fix broken dependencies if needed
-    && apt-get install -f -y \
-    # Clean up downloaded .deb file
-    && rm wkhtmltox_0.12.6-1.bionic_amd64.deb
+    libxext6 \
+    xfonts-base \
+    xfonts-75dpi \
+    wget \
+    xz-utils \
+    && wget -O wkhtmltox.tar.xz https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.bookworm_amd64.tar.xz \
+    && tar -Jxf wkhtmltox.tar.xz -C /usr/local --strip-components 1 \
+    && rm wkhtmltox.tar.xz \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy backend requirements (make sure to add the correct dependencies in requirements.txt)
+# Copy the requirements file first to leverage Docker's build cache.
+# This layer only rebuilds if requirements.txt changes.
 COPY requirements.txt .
 
-# Install Python dependencies from requirements.txt
+# Install Python dependencies.
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire backend code into the container
+# Copy the rest of the application code.
+# This layer rebuilds only when other code files change.
 COPY . .
 
-# Create uploads directory (modify according to your app's needs)
+# Create the uploads directory.
 RUN mkdir -p uploads
 
-# Expose the backend port (adjust to the one used by your app)
+# Expose the application port.
 EXPOSE 8000
 
-# Command to run the backend application (using Uvicorn to run a FastAPI app)
+# Command to run the application using Uvicorn.
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
