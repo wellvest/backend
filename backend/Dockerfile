@@ -1,23 +1,10 @@
-# Stage 1: Build the frontend (if using a frontend build tool like npm, yarn, etc.)
-FROM node:18 AS frontend-build
-
-# Set working directory for frontend
-WORKDIR /app/frontend
-
-# Copy frontend code and install dependencies (change based on your frontend framework)
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm install
-
-# Build the frontend (if you have a build step)
-RUN npm run build
-
-# Stage 2: Backend and runtime
-FROM python:3.11-slim AS base
+# Use Python 3.11 slim image
+FROM python:3.11-slim
 
 # Set working directory for backend
 WORKDIR /app
 
-# Install system dependencies and wkhtmltopdf
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
@@ -42,14 +29,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY . .
 
-# Copy frontend build output from previous stage
-COPY --from=frontend-build /app/frontend/build /app/frontend
-
 # Create uploads directory
 RUN mkdir -p uploads
 
 # Expose port 8000 for the application
 EXPOSE 8000
 
-# Command to run the application
+# Command to run the backend application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
