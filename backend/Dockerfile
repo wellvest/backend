@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xfonts-75dpi \
     wget \
     xz-utils \
-    && wget -O wkhtmltox.tar.xz https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.bookworm_amd64.tar.xz \
+    && wget -O wkhtmltox.tar.xz https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.bullseye_amd64.tar.xz \
     && tar -Jxf wkhtmltox.tar.xz -C /usr/local --strip-components 1 \
     && rm wkhtmltox.tar.xz \
     && apt-get clean \
